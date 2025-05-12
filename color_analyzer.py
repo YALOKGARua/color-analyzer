@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from tkinter import *
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
+from color_utils import *
 
 class ColorAnalyzer:
     def __init__(self, root):
@@ -112,16 +113,24 @@ class ColorAnalyzer:
                     frame = ttk.Frame(scrollable_frame)
                     frame.pack(side=LEFT, padx=5)
                     
-                    color_box = Canvas(frame, width=50, height=50, bg=f'#{color[0]:02x}{color[1]:02x}{color[2]:02x}')
+                    r, g, b = color[0], color[1], color[2]
+                    color_box = Canvas(frame, width=50, height=50, bg=rgb_to_hex(r, g, b))
                     color_box.pack()
                     
-                    hsv = cv2.cvtColor(np.uint8([[color]]), cv2.COLOR_RGB2HSV)[0][0]
+                    comp_r, comp_g, comp_b = get_complementary_color(r, g, b)
+                    comp_color = Canvas(frame, width=25, height=25, bg=rgb_to_hex(comp_r, comp_g, comp_b))
+                    comp_color.pack()
                     
-                    rgb_text = f"RGB: {color[0]}, {color[1]}, {color[2]}"
+                    rgb_text = f"RGB: {r}, {g}, {b}"
+                    hsv = rgb_to_hsv(r, g, b)
                     hsv_text = f"HSV: {hsv[0]}, {hsv[1]}, {hsv[2]}"
+                    name_text = f"Цвет: {get_color_name(r, g, b)}"
+                    temp_text = f"Тип: {get_color_temperature(r, g, b)}"
                     
                     ttk.Label(frame, text=rgb_text).pack()
                     ttk.Label(frame, text=hsv_text).pack()
+                    ttk.Label(frame, text=name_text).pack()
+                    ttk.Label(frame, text=temp_text).pack()
                 
                 progress = 80 + (i / len(colors)) * 20
                 self.update_progress(progress, 100, f"Отображение цветов... {i}/{len(colors)}")
