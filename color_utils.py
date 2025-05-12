@@ -1,5 +1,6 @@
 import colorsys
 import numpy as np
+from constants import BASIC_COLORS
 
 def rgb_to_hex(r, g, b):
     return f'#{r:02x}{g:02x}{b:02x}'
@@ -20,37 +21,31 @@ def get_complementary_color(r, g, b):
     return (int(r*255), int(g*255), int(b*255))
 
 def get_color_name(r, g, b):
-    color_dict = {
-        'красный': (255, 0, 0),
-        'зеленый': (0, 255, 0),
-        'синий': (0, 0, 255),
-        'желтый': (255, 255, 0),
-        'пурпурный': (255, 0, 255),
-        'голубой': (0, 255, 255),
-        'белый': (255, 255, 255),
-        'черный': (0, 0, 0),
-        'серый': (128, 128, 128),
-        'оранжевый': (255, 165, 0),
-        'коричневый': (165, 42, 42),
-        'розовый': (255, 192, 203)
-    }
-    
-    min_distance = float('inf')
-    closest_color = 'неизвестный'
-    
-    for name, value in color_dict.items():
-        distance = np.sqrt(sum((np.array([r, g, b]) - np.array(value)) ** 2))
-        if distance < min_distance:
-            min_distance = distance
-            closest_color = name
-            
-    return closest_color
+    color_array = np.array([r, g, b])
+    distances = {name: np.sqrt(np.sum((color_array - np.array(value)) ** 2)) 
+                for name, value in BASIC_COLORS.items()}
+    return min(distances.items(), key=lambda x: x[1])[0]
 
 def get_color_temperature(r, g, b):
     temperature = (r * 0.299 + g * 0.587 + b * 0.114)
-    if temperature > 190:
-        return "теплый"
-    elif temperature < 64:
-        return "холодный"
-    else:
-        return "нейтральный" 
+    if temperature > 190: return "теплый"
+    if temperature < 64: return "холодный"
+    return "нейтральный"
+
+def process_colors_batch(pixels, start_idx, batch_size):
+    batch = pixels[start_idx:start_idx + batch_size]
+    results = []
+    for color in batch:
+        r, g, b = color[0], color[1], color[2]
+        comp_r, comp_g, comp_b = get_complementary_color(r, g, b)
+        hsv = rgb_to_hsv(r, g, b)
+        results.append({
+            'rgb': (r, g, b),
+            'hex': rgb_to_hex(r, g, b),
+            'comp': (comp_r, comp_g, comp_b),
+            'comp_hex': rgb_to_hex(comp_r, comp_g, comp_b),
+            'hsv': hsv,
+            'name': get_color_name(r, g, b),
+            'temp': get_color_temperature(r, g, b)
+        })
+    return results 
